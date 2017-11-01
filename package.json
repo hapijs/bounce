@@ -1,0 +1,28 @@
+{
+  "name": "bounce",
+  "description": "Selective error catching and rewrite rules",
+  "version": "0.0.0",
+  "repository": "git://github.com/hapijs/bounce",
+  "main": "lib/index.js",
+  "keywords": [
+    "error",
+    "catch"
+  ],
+  "engines": {
+    "node": ">=8.9.0"
+  },
+  "dependencies": {
+    "boom": "6.x.x"
+  },
+  "devDependencies": {
+    "code": "5.x.x",
+    "lab": "15.x.x"
+  },
+  "scripts": {
+    "test": "lab -a code -t 100 -L -v",
+    "test-cov-html": "lab -a code -r html -o coverage.html -L",
+    "toc": "node generate-toc.js",
+    "version": "npm run toc && git add README.md"
+  },
+  "license": "BSD-3-Clause"
+}
