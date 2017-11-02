@@ -1,7 +1,7 @@
 {
   "name": "bounce",
   "description": "Selective error catching and rewrite rules",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": "git://github.com/hapijs/bounce",
   "main": "lib/index.js",
   "keywords": [
@@ -12,6 +12,7 @@
     "node": ">=8.9.0"
   },
   "dependencies": {
+    "hoek": "5.x.x"
   },
   "devDependencies": {
     "boom": "6.x.x",
