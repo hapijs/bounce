@@ -8,7 +8,7 @@ Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
 
 ## Introduction
 
-Working with `async`/`await` introduces a new challange in handling errors. Unlike callbacks which
+Working with `async`/`await` introduces a new challange in handling errors. Unlike callbacks, which
 provide a dual machanism for passing application errors via the callback `err` argument and
 developer errors via exceptions, `await` combines these two channels into one.
 
@@ -48,7 +48,7 @@ async function register(address, name) {
 }
 ```
 
-This will fail silently every time the user has a `name` becaue it is reassinging a value to a
+This will fail silently every time the user has a `name` because it is reassigning a value to a
 `const` variable. However, because `email()` errors are ignored, system errors are ignored as well.
 The idea is that `email()` can be used in both critical and non-critical paths. In the critical
 paths, errors are checked and addressed, but in the non-critical paths, errors are simply ignored.
@@ -68,7 +68,7 @@ async function register(address, name) {
         await email(user);
     }
     catch (err) {
-        Bounce.rethrow(err, 'system');  // Rethrows system erros and ignores application errors
+        Bounce.rethrow(err, 'system');  // Rethrows system errors and ignores application errors
     }
 
     return user;
@@ -90,7 +90,7 @@ Throws the error passed if it matches any of the specified rules where:
       the error properties.
 - `options` - optional object where:
     - `decorate` - an object which is assigned to the `err`, copying the properties onto the error.
-    - `override` - an error used to override `err` when it `err` matches. If used with `decorate`,
+    - `override` - an error used to override `err` when `err` matches. If used with `decorate`,
       the `override` object is modified.
     - `return` - if `true`, the error is returned instead of thrown. Defaults to `false`.
 
