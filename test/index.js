@@ -2,6 +2,8 @@
 
 // Load modules
 
+const Assert = require('assert');
+
 const Code = require('code');
 const Boom = require('boom');
 const Bounce = require('..');
@@ -21,14 +23,14 @@ const expect = Code.expect;
 
 describe('Bounce', () => {
 
-    describe('catch()', () => {
+    describe('rethrow()', () => {
 
-        it('bounces all errors', () => {
+        it('rethrows all errors', () => {
 
             const orig = new Error('Something');
 
             try {
-                Bounce.catch(orig);
+                Bounce.rethrow(orig);
             }
             catch (err) {
                 var error = err;
@@ -38,10 +40,10 @@ describe('Bounce', () => {
             expect(error).to.be.an.error('Something');
         });
 
-        it('bounces only system errors', () => {
+        it('rethrows only system errors', () => {
 
             try {
-                Bounce.catch(new Error('Something'), { types: 'system' });
+                Bounce.rethrow(new Error('Something'), 'system');
             }
             catch (err) {
                 var error1 = err;
@@ -50,7 +52,7 @@ describe('Bounce', () => {
             expect(error1).to.not.exist();
 
             try {
-                Bounce.catch(new URIError('Something'), { types: 'system' });
+                Bounce.rethrow(new URIError('Something'), 'system');
             }
             catch (err) {
                 var error2 = err;
@@ -59,31 +61,10 @@ describe('Bounce', () => {
             expect(error2).to.be.an.error('Something', URIError);
         });
 
-        it('bounces only non-system errors', () => {
+        it('rethrows only boom errors', () => {
 
             try {
-                Bounce.catch(new Error('Something'), { types: 'system', not: true });
-            }
-            catch (err) {
-                var error1 = err;
-            }
-
-            expect(error1).to.be.an.error('Something', Error);
-
-            try {
-                Bounce.catch(new URIError('Something'), { types: 'system', not: true });
-            }
-            catch (err) {
-                var error2 = err;
-            }
-
-            expect(error2).to.not.exist();
-        });
-
-        it('bounces only boom errors', () => {
-
-            try {
-                Bounce.catch(new Error('Something'), { types: 'boom' });
+                Bounce.rethrow(new Error('Something'), 'boom');
             }
             catch (err) {
                 var error1 = err;
@@ -92,7 +73,7 @@ describe('Bounce', () => {
             expect(error1).to.not.exist();
 
             try {
-                Bounce.catch(Boom.badRequest('Something'), { types: 'boom' });
+                Bounce.rethrow(Boom.badRequest('Something'), 'boom');
             }
             catch (err) {
                 var error2 = err;
@@ -101,31 +82,10 @@ describe('Bounce', () => {
             expect(error2).to.be.an.error('Something');
         });
 
-        it('bounces only non-boom errors', () => {
+        it('rethrows only boom/system errors', () => {
 
             try {
-                Bounce.catch(new Error('Something'), { types: 'boom', not: true });
-            }
-            catch (err) {
-                var error1 = err;
-            }
-
-            expect(error1).to.be.an.error('Something', Error);
-
-            try {
-                Bounce.catch(Boom.badRequest('Something'), { types: 'boom', not: true });
-            }
-            catch (err) {
-                var error2 = err;
-            }
-
-            expect(error2).to.not.exist();
-        });
-
-        it('bounces only boom/system errors', () => {
-
-            try {
-                Bounce.catch(new Error('Something'), { types: ['boom', 'system'] });
+                Bounce.rethrow(new Error('Something'), ['boom', 'system']);
             }
             catch (err) {
                 var error1 = err;
@@ -134,7 +94,7 @@ describe('Bounce', () => {
             expect(error1).to.not.exist();
 
             try {
-                Bounce.catch(Boom.badRequest('Something'), { types: ['boom', 'system'] });
+                Bounce.rethrow(Boom.badRequest('Something'), ['boom', 'system']);
             }
             catch (err) {
                 var error2 = err;
@@ -143,7 +103,7 @@ describe('Bounce', () => {
             expect(error2).to.be.an.error('Something');
 
             try {
-                Bounce.catch(new SyntaxError('Something'), { types: ['boom', 'system'] });
+                Bounce.rethrow(new SyntaxError('Something'), ['boom', 'system']);
             }
             catch (err) {
                 var error3 = err;
@@ -152,43 +112,103 @@ describe('Bounce', () => {
             expect(error3).to.be.an.error('Something', SyntaxError);
         });
 
-        it('bounces only non-boom/system errors', () => {
+        it('rethrows only specified errors', () => {
 
             try {
-                Bounce.catch(new Error('Something'), { types: ['boom', 'system'], not: true });
+                Bounce.rethrow(new Error('Something'), URIError);
             }
             catch (err) {
                 var error1 = err;
             }
 
-            expect(error1).to.be.an.error('Something', Error);
+            expect(error1).to.not.exist();
 
             try {
-                Bounce.catch(Boom.badRequest('Something'), { types: ['boom', 'system'], not: true });
+                Bounce.rethrow(new URIError('Something'), URIError);
             }
             catch (err) {
                 var error2 = err;
             }
 
-            expect(error2).to.not.exist();
-
-            try {
-                Bounce.catch(new ReferenceError('Something'), { types: ['boom', 'system'], not: true });
-            }
-            catch (err) {
-                var error3 = err;
-            }
-
-            expect(error3).to.not.exist();
+            expect(error2).to.be.an.error('Something', URIError);
         });
 
-        it('bounces a decorated error', () => {
+        it('rethrows only specified errors', () => {
+
+            try {
+                Bounce.rethrow(new Error('Something'), URIError);
+            }
+            catch (err) {
+                var error1 = err;
+            }
+
+            expect(error1).to.not.exist();
+
+            try {
+                Bounce.rethrow(new URIError('Something'), URIError);
+            }
+            catch (err) {
+                var error2 = err;
+            }
+
+            expect(error2).to.be.an.error('Something', URIError);
+        });
+
+        it('rethrows only errors matching a pattern', () => {
+
+            try {
+                Bounce.rethrow(new Error('Something'), { x: 1 });
+            }
+            catch (err) {
+                var error1 = err;
+            }
+
+            expect(error1).to.not.exist();
+
+            const xErr = new Error('Something');
+            xErr.x = 1;
+
+            try {
+                Bounce.rethrow(xErr, { x: 1 });
+            }
+            catch (err) {
+                var error2 = err;
+            }
+
+            expect(error2).to.be.an.error('Something');
+        });
+
+        it('rethrows only errors matching a pattern (deep)', () => {
+
+            try {
+                Bounce.rethrow(new Error('Something'), { x: { y: 2 } });
+            }
+            catch (err) {
+                var error1 = err;
+            }
+
+            expect(error1).to.not.exist();
+
+            const xErr = new Error('Something');
+            xErr.x = { y: 2, z: 4 };
+
+            try {
+                Bounce.rethrow(xErr, { x: { y: 2 } });
+            }
+            catch (err) {
+                var error2 = err;
+            }
+
+            expect(error2).to.be.an.error('Something');
+        });
+
+        it('rethrows a decorated error', () => {
 
             const orig = new Error('Something');
             const decorate = { x: 1, y: 'z' };
 
             try {
-                Bounce.catch(orig, { decorate });
+                Bounce.rethrow(orig, Error, { decorate });
             }
             catch (err) {
                 var error = err;
@@ -198,6 +218,107 @@ describe('Bounce', () => {
             expect(error).to.be.an.error('Something');
             expect(error.x).to.equal(1);
             expect(error.y).to.equal('z');
+        });
+
+        it('throws a different error', () => {
+
+            const orig = new Error('Something');
+
+            try {
+                Bounce.rethrow(orig, Error, { override: new Error('Else') });
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.not.shallow.equal(orig);
+            expect(error).to.be.an.error('Else');
+        });
+
+        it('returns error instead of throwing', () => {
+
+            const orig = new Error('Something');
+
+            expect(() => Bounce.rethrow(orig, Error, { return: true })).to.not.throw();
+
+            const error = Bounce.rethrow(orig, Error, { return: true });
+            expect(error).to.shallow.equal(orig);
+            expect(error).to.be.an.error('Something');
+        });
+    });
+
+    describe('ignore()', () => {
+
+        it('ignores system errors', () => {
+
+            try {
+                Bounce.ignore(new Error('Something'), 'system');
+            }
+            catch (err) {
+                var error1 = err;
+            }
+
+            expect(error1).to.be.an.error('Something', Error);
+
+            try {
+                Bounce.ignore(new URIError('Something'), 'system');
+            }
+            catch (err) {
+                var error2 = err;
+            }
+
+            expect(error2).to.not.exist();
+        });
+
+        it('ignores boom errors', () => {
+
+            try {
+                Bounce.ignore(new Error('Something'), 'boom');
+            }
+            catch (err) {
+                var error1 = err;
+            }
+
+            expect(error1).to.be.an.error('Something', Error);
+
+            try {
+                Bounce.ignore(Boom.badRequest('Something'), 'boom');
+            }
+            catch (err) {
+                var error2 = err;
+            }
+
+            expect(error2).to.not.exist();
+        });
+
+        it('ignores boom/system errors', () => {
+
+            try {
+                Bounce.ignore(new Error('Something'), ['boom', 'system']);
+            }
+            catch (err) {
+                var error1 = err;
+            }
+
+            expect(error1).to.be.an.error('Something', Error);
+
+            try {
+                Bounce.ignore(Boom.badRequest('Something'), ['boom', 'system']);
+            }
+            catch (err) {
+                var error2 = err;
+            }
+
+            expect(error2).to.not.exist();
+
+            try {
+                Bounce.ignore(new ReferenceError('Something'), ['boom', 'system']);
+            }
+            catch (err) {
+                var error3 = err;
+            }
+
+            expect(error3).to.not.exist();
         });
     });
 
@@ -293,6 +414,11 @@ describe('Bounce', () => {
         it('identifies URIError as system', () => {
 
             expect(Bounce.isSystem(new URIError())).to.be.true();
+        });
+
+        it('identifies node AssertionError as system', () => {
+
+            expect(Bounce.isSystem(new Assert.AssertionError({}))).to.be.true();
         });
 
         it('identifies Error as non-system', () => {
