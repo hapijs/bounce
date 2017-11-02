@@ -322,27 +322,6 @@ describe('Bounce', () => {
         });
     });
 
-    describe('decorate()', () => {
-
-        it('adds properties to error', () => {
-
-            const orig = new Error('Something');
-            const properties = { x: 1, y: 'z' };
-
-            try {
-                Bounce.decorate(orig, properties);
-            }
-            catch (err) {
-                var error = err;
-            }
-
-            expect(error).to.shallow.equal(orig);
-            expect(error).to.be.an.error('Something');
-            expect(error.x).to.equal(1);
-            expect(error.y).to.equal('z');
-        });
-    });
-
     describe('isBoom()', () => {
 
         it('identifies Boom as Boom', () => {
