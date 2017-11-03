@@ -414,5 +414,15 @@ describe('Bounce', () => {
 
             expect(Bounce.isSystem({})).to.be.false();
         });
+
+        it('identifies null as non-system', () => {
+
+            expect(Bounce.isSystem(null)).to.be.false();
+        });
+
+        it('identifies boomified system as non-system', () => {
+
+            expect(Bounce.isSystem(Boom.boomify(new TypeError()))).to.be.false();
+        });
     });
 });
