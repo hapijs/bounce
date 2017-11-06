@@ -343,6 +343,24 @@ describe('Bounce', () => {
             expect(error).to.exist();
         });
 
+        it('rethrows system errors (defaults)', async () => {
+
+            const test = async () => {
+
+                await Hoek.wait(10);
+                throw new SyntaxError('Something');
+            };
+
+            try {
+                await Bounce.background(test());
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.exist();
+        });
+
         it('ignores system errors', async () => {
 
             const test = async () => {
@@ -370,6 +388,50 @@ describe('Bounce', () => {
             };
 
             Bounce.background(test(), 'rethrow', 'system');
+        });
+
+        it('rethrows system errors (sync)', async () => {
+
+            const test = () => {
+
+                throw new SyntaxError('Something');
+            };
+
+            try {
+                await Bounce.background(test, 'rethrow', 'system');
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.exist();
+        });
+
+        it('ignores system errors (sync)', async () => {
+
+            const test = () => {
+
+                throw new Error('Something');
+            };
+
+            try {
+                await Bounce.background(test, 'rethrow', 'system');
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.not.exist();
+        });
+
+        it('ignores system errors (background sync)', () => {
+
+            const test = () => {
+
+                throw new Error('Something');
+            };
+
+            Bounce.background(test, 'rethrow', 'system');
         });
     });
 

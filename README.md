@@ -16,6 +16,10 @@ It is common practice to ignore application errors in background processing or w
 useful fallback. In those cases, it is still imperative to allow developer errors to surface and
 not get swallowed.
 
+For more information read:
+- [Learning to Throw Again](https://medium.com/@eranhammer/learning-to-throw-again-79b498504d28)
+- [Catching without Awaiting](https://medium.com/@eranhammer/catching-without-awaiting-b2cb7df45790)
+
 For example:
 
 ```js
@@ -98,6 +102,16 @@ Throws the error passed if it matches any of the specified rules where:
 
 The opposite action of `rethrow()`. Ignores any errors matching the specified `types`. Any error
 not matching is thrown after applying the `options`.
+
+### `background(operation, [action], [types], [options])`
+
+Awaits for the value to resolve in the background and then apply either the `rethrow()` or `ignore()`
+actions where:
+- `operation` - a function, promise, or value that is `await`ed on inside a `try...catch` and any
+  error thrown processed by the `action` rule.
+- `action` - one of `'rethrow'` or `'ignore'`. Defaults to `'rethrow'`.
+- `types` - same as the `types` argument passed to `rethrow()` or `ignore()`. Defaults to `'system'`.
+- `options` - same as the `options` argument passed to `rethrow()` or `ignore()`.
 
 ### `isBoom(err)`
 
