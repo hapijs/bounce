@@ -369,7 +369,7 @@ describe('Bounce', () => {
                 throw new Error('Something');
             };
 
-            Bounce.background(test(), 'rethrow');
+            Bounce.background(test(), 'rethrow', 'system');
         });
     });
 
