@@ -7,6 +7,7 @@ const Assert = require('assert');
 const Code = require('code');
 const Boom = require('boom');
 const Bounce = require('..');
+const Hoek = require('hoek');
 const Lab = require('lab');
 
 
@@ -319,6 +320,56 @@ describe('Bounce', () => {
             }
 
             expect(error3).to.not.exist();
+        });
+    });
+
+    describe('background()', () => {
+
+        it('rethrows system errors', async () => {
+
+            const test = async () => {
+
+                await Hoek.wait(10);
+                throw new SyntaxError('Something');
+            };
+
+            try {
+                await Bounce.background(test(), 'rethrow', 'system');
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.exist();
+        });
+
+        it('ignores system errors', async () => {
+
+            const test = async () => {
+
+                await Hoek.wait(10);
+                throw new Error('Something');
+            };
+
+            try {
+                await Bounce.background(test(), 'rethrow', 'system');
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.not.exist();
+        });
+
+        it('ignores system errors (background)', () => {
+
+            const test = async () => {
+
+                await Hoek.wait(10);
+                throw new Error('Something');
+            };
+
+            Bounce.background(test(), 'rethrow');
         });
     });
 
