@@ -29,7 +29,7 @@ async function email(user) {
         throw new Error('User has no email address');
     }
 
-    const message = 'Welcome!';
+    let message = 'Welcome!';
     if (user.name) {
         message = `Welcome ${user.name}!`;
     }
