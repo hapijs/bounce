@@ -9,7 +9,7 @@ Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
 ## Introduction
 
 Working with `async`/`await` introduces a new challange in handling errors. Unlike callbacks, which
-provide a dual machanism for passing application errors via the callback `err` argument and
+provide a dual mechanism for passing application errors via the callback `err` argument and
 developer errors via exceptions, `await` combines these two channels into one.
 
 It is common practice to ignore application errors in background processing or when there is no
