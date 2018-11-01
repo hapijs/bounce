@@ -1,7 +1,7 @@
 {
   "name": "bounce",
   "description": "Selective error catching and rewrite rules",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "repository": "git://github.com/hapijs/bounce",
   "main": "lib/index.js",
   "keywords": [
