@@ -60,7 +60,7 @@ paths, errors are checked and addressed, but in the non-critical paths, errors a
 This can be solved by adding a `rethrow()` statement:
 
 ```js
-const Bounce = require('bounce');
+const Bounce = require('@hapi/bounce');
 
 async function register(address, name) {
 
