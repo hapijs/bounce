@@ -10,11 +10,11 @@
   ],
   "dependencies": {
     "@hapi/boom": "7.x.x",
-    "@hapi/hoek": "6.x.x"
+    "@hapi/hoek": "8.x.x"
   },
   "devDependencies": {
     "@hapi/code": "5.x.x",
-    "@hapi/lab": "18.x.x"
+    "@hapi/lab": "19.x.x"
   },
   "scripts": {
     "test": "lab -a @hapi/code -t 100 -L",

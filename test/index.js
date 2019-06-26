@@ -507,6 +507,11 @@ describe('Bounce', () => {
             expect(Bounce.isSystem(new Assert.AssertionError({}))).to.be.true();
         });
 
+        it('identifies hoek Error as system', () => {
+
+            expect(Bounce.isSystem(new Hoek.Error([]))).to.be.true();
+        });
+
         it('identifies Error as non-system', () => {
 
             expect(Bounce.isSystem(new Error())).to.be.false();
