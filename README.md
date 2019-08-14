@@ -4,7 +4,7 @@
 
 Selective error catching and rewrite rules
 
-[![Build Status](https://secure.travis-ci.org/hapijs/bounce.svg)](http://travis-ci.org/hapijs/bounce)
+[![Build Status](https://secure.travis-ci.org/hapijs/bounce.svg)](http://travis-ci.org/hapijs/bounce) [![Greenkeeper badge](https://badges.greenkeeper.io/hapijs/bounce.svg)](https://greenkeeper.io/)
 
 ## Introduction
 
