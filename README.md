@@ -12,5 +12,6 @@
 
 - [Documentation and API](https://hapi.dev/family/bounce/)
 - [Versions status](https://hapi.dev/resources/status/#bounce) (builds, dependencies, node versions, licenses, eol)
+- [Changelog](https://hapi.dev/family/bounce/changelog/)
 - [Project policies](https://hapi.dev/policies/)
 - [Free and commercial support options](https://hapi.dev/support/)
