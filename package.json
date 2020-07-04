@@ -1,16 +1,19 @@
 {
-  "name": "@hapi/bounce",
+  "name": "@commercial/bounce",
   "description": "Selective error catching and rewrite rules",
   "version": "1.3.2",
   "repository": "git://github.com/hapijs/bounce",
+  "engines": {
+    "node": ">=8.0.0"
+  },
   "main": "lib/index.js",
   "keywords": [
     "error",
     "catch"
   ],
   "dependencies": {
-    "@hapi/boom": "7.x.x",
-    "@hapi/hoek": "^8.3.1"
+    "@commercial/boom": "^7.4.11",
+    "@commercial/hoek": "^8.5.1"
   },
   "devDependencies": {
     "@hapi/code": "6.x.x",
@@ -20,5 +23,5 @@
     "test": "lab -a @hapi/code -t 100 -L",
     "test-cov-html": "lab -a @hapi/code -r html -o coverage.html -L"
   },
-  "license": "BSD-3-Clause"
+  "license": "SEE LICENSE IN LICENSE.md"
 }
