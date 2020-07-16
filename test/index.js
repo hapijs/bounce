@@ -3,9 +3,9 @@
 const Assert = require('assert');
 
 const Code = require('@hapi/code');
-const Boom = require('@hapi/boom');
+const Boom = require('@commercial/boom');
 const Bounce = require('..');
-const Hoek = require('@hapi/hoek');
+const Hoek = require('@commercial/hoek');
 const Lab = require('@hapi/lab');
 
 
