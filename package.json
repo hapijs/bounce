@@ -17,11 +17,11 @@
     ]
   },
   "dependencies": {
-    "@hapi/boom": "10.x.x",
-    "@hapi/hoek": "10.x.x"
+    "@hapi/boom": "^10.0.0",
+    "@hapi/hoek": "^10.0.0"
   },
   "devDependencies": {
-    "@hapi/code": "9.x.x",
+    "@hapi/code": "^9.0.0",
     "@hapi/eslint-plugin": "*",
     "@hapi/lab": "25.0.0-beta.1"
   },
