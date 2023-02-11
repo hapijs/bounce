@@ -509,7 +509,7 @@ describe('Bounce', () => {
 
         it('identifies hoek Error as system', () => {
 
-            expect(Bounce.isSystem(new Hoek.Error([]))).to.be.true();
+            expect(Bounce.isSystem(new Hoek.AssertError([]))).to.be.true();
         });
 
         it('identifies Error as non-system', () => {
