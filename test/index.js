@@ -303,6 +303,23 @@ describe('Bounce', () => {
             expect(error).to.be.an.error('Fail');
         });
 
+        it('rethrows already aborted signal with no reason', () => {
+
+            const orig = new Error('Something');
+            const signal = AbortSignal.abort();
+
+            Object.defineProperty(signal, 'reason', { value: undefined });     // Simulate older API without the reason property
+
+            try {
+                Bounce.rethrow(orig, null, { signal });
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.be.an.error(DOMException, 'This operation was aborted');
+        });
+
         it('ignores non-aborted signal', () => {
 
             const orig = new Error('Something');
