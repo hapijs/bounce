@@ -427,6 +427,19 @@ describe('Bounce', () => {
 
             Bounce.background(test, 'rethrow', 'system');
         });
+
+        it('supports the return option', async () => {
+
+            const test = async () => {
+
+                await Hoek.wait(1);
+                throw new SyntaxError('Something');
+            };
+
+            const res = await Bounce.background(test(), 'rethrow', 'system', { return: true });
+            expect(res).to.exist();
+            expect(res).to.be.an.error(SyntaxError);
+        });
     });
 
     describe('isBoom()', () => {
