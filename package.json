@@ -4,6 +4,7 @@
   "version": "3.0.1",
   "repository": "git://github.com/hapijs/bounce",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
     "lib"
   ],
@@ -18,10 +19,12 @@
   "devDependencies": {
     "@hapi/code": "^9.0.0",
     "@hapi/eslint-plugin": "^7.0.0",
-    "@hapi/lab": "^26.0.0"
+    "@hapi/lab": "^26.0.0",
+    "@types/node": "^18.19.57",
+    "typescript": "~5.6.3"
   },
   "scripts": {
-    "test": "lab -a @hapi/code -t 100 -L",
+    "test": "lab -a @hapi/code -t 100 -L -Y",
     "test-cov-html": "lab -a @hapi/code -r html -o coverage.html -L"
   },
   "license": "BSD-3-Clause"
