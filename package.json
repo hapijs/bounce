@@ -11,19 +11,14 @@
     "error",
     "catch"
   ],
-  "eslintConfig": {
-    "extends": [
-      "plugin:@hapi/module"
-    ]
-  },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
-    "@hapi/hoek": "^11.0.2"
+    "@hapi/hoek": "^11.0.4"
   },
   "devDependencies": {
     "@hapi/code": "^9.0.0",
-    "@hapi/eslint-plugin": "*",
-    "@hapi/lab": "^25.1.0"
+    "@hapi/eslint-plugin": "^7.0.0",
+    "@hapi/lab": "^26.0.0"
   },
   "scripts": {
     "test": "lab -a @hapi/code -t 100 -L",
