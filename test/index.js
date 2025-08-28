@@ -1,5 +1,20 @@
 'use strict';
 
+// Add custom assertion to assertion list. Must be done before requiring Bounce
+
+class HasInstanceCheckError {
+
+    static [Symbol.hasInstance](instance) {
+
+        return instance.message === 'custom-error';
+    }
+}
+
+const Assertions = require('../lib/assertions');
+
+Assertions.push(HasInstanceCheckError);
+
+
 const Assert = require('assert');
 
 const Code = require('@hapi/code');
@@ -518,6 +533,11 @@ describe('Bounce', () => {
         it('identifies node AssertionError as system', () => {
 
             expect(Bounce.isSystem(new Assert.AssertionError({}))).to.be.true();
+        });
+
+        it('identifies custom assertion Error as system', () => {
+
+            expect(Bounce.isSystem(new Error('custom-error'))).to.be.true();
         });
 
         it('identifies hoek Error as system', () => {
