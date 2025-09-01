@@ -1,5 +1,20 @@
 'use strict';
 
+// Add custom assertion to assertion list. Must be done before requiring Bounce
+
+class HasInstanceCheckError {
+
+    static [Symbol.hasInstance](instance) {
+
+        return instance.message === 'custom-error';
+    }
+}
+
+const Assertions = require('../lib/assertions');
+
+Assertions.push(HasInstanceCheckError);
+
+
 const Assert = require('assert');
 
 const Code = require('@hapi/code');
@@ -20,7 +35,7 @@ describe('Bounce', () => {
 
     describe('rethrow()', () => {
 
-        it('rethrows all errors', () => {
+        it('throws TypeError on missing types', () => {
 
             const orig = new Error('Something');
 
@@ -31,8 +46,17 @@ describe('Bounce', () => {
                 var error = err;
             }
 
-            expect(error).to.shallow.equal(orig);
-            expect(error).to.be.an.error('Something');
+            expect(error).to.not.shallow.equal(orig);
+            expect(error).to.be.an.error(TypeError);
+        });
+
+        it('throws TypeError on unhandled types', () => {
+
+            expect(() => Bounce.rethrow(new Error(), false)).to.throw(TypeError, 'Missing or invalid "types" argument');
+            expect(() => Bounce.rethrow(new Error(), 'invalid')).to.throw(TypeError, 'Invalid "types" argument');
+            expect(() => Bounce.rethrow(new Error(), ['invalid'])).to.throw(TypeError, 'Invalid "types" argument');
+            expect(() => Bounce.rethrow(new Error(), 123)).to.throw(TypeError, 'Invalid "types" argument');
+            expect(() => Bounce.rethrow(new Error(), () => 123)).to.throw(TypeError, 'Invalid "types" argument');
         });
 
         it('rethrows only system errors', () => {
@@ -59,7 +83,7 @@ describe('Bounce', () => {
         it('rethrows only boom errors', () => {
 
             try {
-                Bounce.rethrow(new Error('Something'), 'boom');
+                Bounce.rethrow(new Error('Something'), Boom.Boom);
             }
             catch (err) {
                 var error1 = err;
@@ -68,7 +92,7 @@ describe('Bounce', () => {
             expect(error1).to.not.exist();
 
             try {
-                Bounce.rethrow(Boom.badRequest('Something'), 'boom');
+                Bounce.rethrow(Boom.badRequest('Something'), Boom.Boom);
             }
             catch (err) {
                 var error2 = err;
@@ -80,7 +104,7 @@ describe('Bounce', () => {
         it('rethrows only boom/system errors', () => {
 
             try {
-                Bounce.rethrow(new Error('Something'), ['boom', 'system']);
+                Bounce.rethrow(new Error('Something'), [Boom.Boom, 'system']);
             }
             catch (err) {
                 var error1 = err;
@@ -89,7 +113,7 @@ describe('Bounce', () => {
             expect(error1).to.not.exist();
 
             try {
-                Bounce.rethrow(Boom.badRequest('Something'), ['boom', 'system']);
+                Bounce.rethrow(Boom.badRequest('Something'), [Boom.Boom, 'system']);
             }
             catch (err) {
                 var error2 = err;
@@ -98,13 +122,59 @@ describe('Bounce', () => {
             expect(error2).to.be.an.error('Something');
 
             try {
-                Bounce.rethrow(new SyntaxError('Something'), ['boom', 'system']);
+                Bounce.rethrow(new SyntaxError('Something'), [Boom.Boom, 'system']);
             }
             catch (err) {
                 var error3 = err;
             }
 
             expect(error3).to.be.an.error('Something', SyntaxError);
+        });
+
+        it('rethrows only abort errors', () => {
+
+            try {
+                Bounce.rethrow(new Error('Something'), 'abort');
+            }
+            catch (err) {
+                var error1 = err;
+            }
+
+            expect(error1).to.not.exist();
+
+            try {
+                Bounce.rethrow(AbortSignal.abort().reason, 'abort');
+            }
+            catch (err) {
+                var error2 = err;
+            }
+
+            expect(error2).to.be.an.error(DOMException);
+            expect(error2.name).to.equal('AbortError');
+        });
+
+        it('rethrows only timeout errors', async () => {
+
+            try {
+                Bounce.rethrow(new Error('Something'), 'timeout');
+            }
+            catch (err) {
+                var error1 = err;
+            }
+
+            expect(error1).to.not.exist();
+
+            try {
+                const signal = AbortSignal.timeout(0);
+                await Hoek.wait(1);
+                Bounce.rethrow(signal.reason, 'timeout');
+            }
+            catch (err) {
+                var error2 = err;
+            }
+
+            expect(error2).to.be.an.error(DOMException);
+            expect(error2.name).to.equal('TimeoutError');
         });
 
         it('rethrows only specified errors', () => {
@@ -197,6 +267,20 @@ describe('Bounce', () => {
             expect(error2).to.be.an.error('Something');
         });
 
+        it('ignores non-errors matching a pattern', () => {
+
+            const nonErr = { x: 1 };
+
+            try {
+                Bounce.rethrow(nonErr, { x: 1 }, { strict: false });
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.not.exist();
+        });
+
         it('rethrows a decorated error', () => {
 
             const orig = new Error('Something');
@@ -240,14 +324,100 @@ describe('Bounce', () => {
             expect(error).to.shallow.equal(orig);
             expect(error).to.be.an.error('Something');
         });
+
+        it('preserves non-errors', () => {
+
+            try {
+                Bounce.rethrow('error', [], { strict: false });
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.not.exist();
+        });
+
+        it('rethrows already aborted signal reason', () => {
+
+            const orig = new Error('Something');
+            const signal = AbortSignal.abort(new Error('Fail'));
+
+            try {
+                Bounce.rethrow(orig, Error, { signal });
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.shallow.equal(signal.reason);
+            expect(error).to.be.an.error('Fail');
+        });
+
+        it('rethrows already aborted signal with no reason', () => {
+
+            const orig = new Error('Something');
+            const signal = AbortSignal.abort();
+
+            Object.defineProperty(signal, 'reason', { value: undefined });     // Simulate older API without the reason property
+
+            try {
+                Bounce.rethrow(orig, Error, { signal });
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.be.an.error(DOMException, 'This operation was aborted');
+        });
+
+        it('ignores non-aborted signal', () => {
+
+            const orig = new Error('Something');
+            const signal = new AbortController().signal;
+
+            try {
+                Bounce.rethrow(orig, Error, { signal });
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.shallow.equal(orig);
+            expect(error).to.be.an.error('Something');
+        });
+
+        it('always throws TypeError for non-errors when strict', () => {
+
+            const orig = 'error';
+
+            try {
+                Bounce.rethrow(orig, [], { strict: true });
+            }
+            catch (err) {
+                var error1 = err;
+            }
+
+            expect(error1).to.be.an.error(TypeError);
+            expect(error1.cause).to.shallow.equal(orig);
+
+            try {
+                Bounce.rethrow(orig, [], { strict: true });
+            }
+            catch (err) {
+                var error2 = err;
+            }
+
+            expect(error2).to.be.an.error(TypeError);
+            expect(error2.cause).to.shallow.equal(orig);
+        });
     });
 
-    describe('ignore()', () => {
+    describe('assert()', () => {
 
         it('ignores system errors', () => {
 
             try {
-                Bounce.ignore(new Error('Something'), 'system');
+                Bounce.assert(new Error('Something'), 'system');
             }
             catch (err) {
                 var error1 = err;
@@ -256,7 +426,7 @@ describe('Bounce', () => {
             expect(error1).to.be.an.error('Something', Error);
 
             try {
-                Bounce.ignore(new URIError('Something'), 'system');
+                Bounce.assert(new URIError('Something'), 'system');
             }
             catch (err) {
                 var error2 = err;
@@ -268,7 +438,7 @@ describe('Bounce', () => {
         it('ignores boom errors', () => {
 
             try {
-                Bounce.ignore(new Error('Something'), 'boom');
+                Bounce.assert(new Error('Something'), Boom.Boom);
             }
             catch (err) {
                 var error1 = err;
@@ -277,7 +447,7 @@ describe('Bounce', () => {
             expect(error1).to.be.an.error('Something', Error);
 
             try {
-                Bounce.ignore(Boom.badRequest('Something'), 'boom');
+                Bounce.assert(Boom.badRequest('Something'), Boom.Boom);
             }
             catch (err) {
                 var error2 = err;
@@ -289,7 +459,7 @@ describe('Bounce', () => {
         it('ignores boom/system errors', () => {
 
             try {
-                Bounce.ignore(new Error('Something'), ['boom', 'system']);
+                Bounce.assert(new Error('Something'), [Boom.Boom, 'system']);
             }
             catch (err) {
                 var error1 = err;
@@ -298,7 +468,7 @@ describe('Bounce', () => {
             expect(error1).to.be.an.error('Something', Error);
 
             try {
-                Bounce.ignore(Boom.badRequest('Something'), ['boom', 'system']);
+                Bounce.assert(Boom.badRequest('Something'), [Boom.Boom, 'system']);
             }
             catch (err) {
                 var error2 = err;
@@ -307,13 +477,84 @@ describe('Bounce', () => {
             expect(error2).to.not.exist();
 
             try {
-                Bounce.ignore(new ReferenceError('Something'), ['boom', 'system']);
+                Bounce.assert(new ReferenceError('Something'), [Boom.Boom, 'system']);
             }
             catch (err) {
                 var error3 = err;
             }
 
             expect(error3).to.not.exist();
+        });
+
+        it('always throws non-errors', () => {
+
+            const orig = 'error';
+
+            try {
+                Bounce.assert(orig, [], { strict: false });
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.shallow.equal(orig);
+        });
+
+        it('rethrows already aborted signal reason', () => {
+
+            const orig = new Error('Something');
+            const signal = AbortSignal.abort(new Error('Fail'));
+
+            try {
+                Bounce.assert(orig, 'system', { signal });
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.shallow.equal(signal.reason);
+            expect(error).to.be.an.error('Fail');
+        });
+
+        it('ignores non-aborted signal', () => {
+
+            const orig = new Error('Something');
+            const signal = new AbortController().signal;
+
+            try {
+                Bounce.assert(orig, 'system', { signal });
+            }
+            catch (err) {
+                var error = err;
+            }
+
+            expect(error).to.shallow.equal(orig);
+            expect(error).to.be.an.error('Something');
+        });
+
+        it('always throws TypeError for non-errors when strict', () => {
+
+            const orig = 'error';
+
+            try {
+                Bounce.assert(orig, [], { strict: true });
+            }
+            catch (err) {
+                var error1 = err;
+            }
+
+            expect(error1).to.be.an.error(TypeError);
+            expect(error1.cause).to.shallow.equal(orig);
+
+            try {
+                Bounce.assert(orig, [], { strict: true });
+            }
+            catch (err) {
+                var error2 = err;
+            }
+
+            expect(error2).to.be.an.error(TypeError);
+            expect(error2.cause).to.shallow.equal(orig);
         });
     });
 
@@ -427,46 +668,18 @@ describe('Bounce', () => {
 
             Bounce.background(test, 'rethrow', 'system');
         });
-    });
 
-    describe('isBoom()', () => {
+        it('supports the return option', async () => {
 
-        it('identifies Boom as Boom', () => {
+            const test = async () => {
 
-            expect(Bounce.isBoom(Boom.badRequest())).to.be.true();
-        });
+                await Hoek.wait(1);
+                throw new SyntaxError('Something');
+            };
 
-        it('identifies EvalError as non-boom', () => {
-
-            expect(Bounce.isBoom(new EvalError())).to.be.false();
-        });
-
-        it('identifies object as non-boom', () => {
-
-            expect(Bounce.isBoom({})).to.be.false();
-        });
-
-        it('identifies object with isBoom as non-boom', () => {
-
-            expect(Bounce.isBoom({ isBoom: true })).to.be.false();
-        });
-    });
-
-    describe('isError()', () => {
-
-        it('identifies Error as error', () => {
-
-            expect(Bounce.isError(new Error())).to.be.true();
-        });
-
-        it('identifies Boom as error', () => {
-
-            expect(Bounce.isError(Boom.badRequest())).to.be.true();
-        });
-
-        it('identifies object as non-error', () => {
-
-            expect(Bounce.isBoom({})).to.be.false();
+            const res = await Bounce.background(test(), 'rethrow', 'system', { return: true });
+            expect(res).to.exist();
+            expect(res).to.be.an.error(SyntaxError);
         });
     });
 
@@ -507,6 +720,11 @@ describe('Bounce', () => {
             expect(Bounce.isSystem(new Assert.AssertionError({}))).to.be.true();
         });
 
+        it('identifies custom assertion Error as system', () => {
+
+            expect(Bounce.isSystem(new Error('custom-error'))).to.be.true();
+        });
+
         it('identifies hoek Error as system', () => {
 
             expect(Bounce.isSystem(new Hoek.AssertError([]))).to.be.true();
@@ -535,6 +753,89 @@ describe('Bounce', () => {
         it('identifies boomified system as non-system', () => {
 
             expect(Bounce.isSystem(Boom.boomify(new TypeError()))).to.be.false();
+        });
+    });
+
+    describe('isAbort()', () => {
+
+        it('identifies AbortSignal.abort() reason as abort', () => {
+
+            expect(Bounce.isAbort(AbortSignal.abort().reason)).to.be.true();
+        });
+
+        it('identifies DOMException AbortError as abort', () => {
+
+            expect(Bounce.isAbort(new DOMException('aborted', 'AbortError'))).to.be.true();
+        });
+
+        it('identifies Error with name "AbortError" as abort', () => {
+
+            class MyAbort extends Error {
+                name = 'AbortError';
+            }
+
+            expect(Bounce.isAbort(new MyAbort())).to.be.true();
+        });
+
+        it('identifies object as non-abort', () => {
+
+            expect(Bounce.isAbort({})).to.be.false();
+        });
+
+        it('identifies error as non-abort', () => {
+
+            expect(Bounce.isAbort(new Error('failed'))).to.be.false();
+        });
+
+        it('identifies object with name "AbortError" as non-abort', () => {
+
+            expect(Bounce.isAbort({ name: 'AbortError' })).to.be.false();
+        });
+
+        it('identifies AbortSignal.timeout() reason non-abort', async () => {
+
+            const signal = AbortSignal.timeout(0);
+            await Hoek.wait(1);
+            expect(Bounce.isAbort(signal.reason)).to.be.false();
+        });
+    });
+
+    describe('isTimeout()', () => {
+
+        it('identifies AbortSignal.timeout() reason as timeout', async () => {
+
+            const signal = AbortSignal.timeout(0);
+            await Hoek.wait(1);
+            expect(Bounce.isTimeout(signal.reason)).to.be.true();
+        });
+
+        it('identifies DOMException TimeoutError as timeout', () => {
+
+            expect(Bounce.isTimeout(new DOMException('timed out', 'TimeoutError'))).to.be.true();
+        });
+
+        it('identifies Error with name "TimeoutError" as timeout', () => {
+
+            class MyTimeout extends Error {
+                name = 'TimeoutError';
+            }
+
+            expect(Bounce.isTimeout(new MyTimeout())).to.be.true();
+        });
+
+        it('identifies object as non-timeout', () => {
+
+            expect(Bounce.isTimeout({})).to.be.false();
+        });
+
+        it('identifies error as non-timeout', () => {
+
+            expect(Bounce.isTimeout(new Error('failed'))).to.be.false();
+        });
+
+        it('identifies object with name "TimeoutError" as non-timeout', () => {
+
+            expect(Bounce.isTimeout({ name: 'TimeoutError' })).to.be.false();
         });
     });
 });
