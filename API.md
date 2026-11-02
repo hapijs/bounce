@@ -76,7 +76,7 @@ Throws the error passed if it matches any of the specified rules where:
 - `err` - the error.
 - `type` - a single item or an array of items of:
     - An error constructor (e.g. `SyntaxError`).
-    - `'system'` - matches any languange native error or node assertions.
+    - `'system'` - matches any language native error or node assertions.
     - `'boom'` - matches [**boom**](https://github.com/hapijs/boom) errors.
     - an object where each property is compared with the error and must match the error property
       value. All the properties in the object must match the error but do not need to include all
@@ -122,3 +122,4 @@ Return `true` when `err` is one of:
 - `TypeError`
 - `URIError`
 - Node's `AssertionError`
+- Hoek's `AssertError`

@@ -53,6 +53,15 @@ describe('typings', () => {
             Bounce.rethrow(new Error(), ['system', 'boom', URIError, { x: 1 }]);
         });
 
+        it('is optional', () => {
+            try {
+                Bounce.rethrow(new Error());
+            } catch {}
+
+            expectTypeOf(Bounce.ignore(new Error())).toEqualTypeOf<void>();
+            expectTypeOf(Bounce.rethrow(new Error(), undefined, { return: true })).toEqualTypeOf<Error | undefined>();
+        });
+
         it('accepts the unknown a catch clause binds', () => {
             try {
                 throw new Error();
@@ -105,8 +114,10 @@ describe('typings', () => {
                 expectTypeOf(err).toEqualTypeOf<Error>();
             }
 
-            if (Bounce.isSystem(err)) {
-                expectTypeOf(err).toExtend<Error>();
+            const error = new Error();
+
+            if (!Bounce.isSystem(error)) {
+                expectTypeOf(error).toEqualTypeOf<Error>();
             }
         });
     });

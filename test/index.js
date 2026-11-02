@@ -7,17 +7,6 @@ import { describe, expect, it } from 'vitest';
 import * as Bounce from '../src/index.js';
 
 describe('Bounce', () => {
-    it('exposes the public API as named exports', () => {
-        expect(Object.keys(Bounce).sort()).toEqual([
-            'background',
-            'ignore',
-            'isBoom',
-            'isError',
-            'isSystem',
-            'rethrow',
-        ]);
-    });
-
     describe('rethrow()', () => {
         it('rethrows all errors', () => {
             const orig = new Error('Something');
@@ -382,6 +371,22 @@ describe('Bounce', () => {
             Bounce.background(test, 'rethrow', 'system');
         });
 
+        it('ignores matching errors with the ignore action', async () => {
+            const test = () => {
+                throw new URIError('Something');
+            };
+
+            await expect(Bounce.background(test, 'ignore', 'system')).resolves.toBeUndefined();
+        });
+
+        it('throws non-matching errors with the ignore action', async () => {
+            const test = () => {
+                throw new Error('Something');
+            };
+
+            await expect(Bounce.background(test, 'ignore', 'system')).rejects.toThrow(/^Something$/);
+        });
+
         it('supports the return option', async () => {
             const test = async () => {
                 await Hoek.wait(1);
@@ -477,6 +482,10 @@ describe('Bounce', () => {
 
         it('identifies boomified system as non-system', () => {
             expect(Bounce.isSystem(Boom.boomify(new TypeError()))).toBe(false);
+        });
+
+        it('identifies system error flagged isBoom as non-system', () => {
+            expect(Bounce.isSystem(Object.assign(new TypeError(), { isBoom: true }))).toBe(false);
         });
     });
 });

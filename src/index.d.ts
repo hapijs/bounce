@@ -1,8 +1,4 @@
-/// <reference types="node" />
-
-import type { AssertionError } from 'node:assert';
 import type { Boom } from '@hapi/boom';
-import type { AssertError } from '@hapi/hoek';
 
 /**
  * A rule matched against an error:
@@ -29,7 +25,7 @@ export interface BounceOptions {
     return?: boolean;
 }
 
-/** What a matched error resolves to; `undefined` under `return: true` when nothing was handled. */
+/** The result under `return: true`: the error that would have been thrown, or `undefined` when nothing would be. */
 export type BounceReturn<TErr, TOpts extends BounceOptions> = TOpts extends { return: true }
     ?
           | undefined
@@ -49,7 +45,7 @@ export type BounceReturn<TErr, TOpts extends BounceOptions> = TOpts extends { re
  */
 export function rethrow<TErr, TOpts extends BounceOptions>(
     err: TErr,
-    types: BounceErrorTypes,
+    types?: BounceErrorTypes,
     options?: TOpts,
 ): BounceReturn<TErr, TOpts>;
 
@@ -63,7 +59,7 @@ export function rethrow<TErr, TOpts extends BounceOptions>(
  */
 export function ignore<TErr, TOpts extends BounceOptions>(
     err: TErr,
-    types: BounceErrorTypes,
+    types?: BounceErrorTypes,
     options?: TOpts,
 ): BounceReturn<TErr, TOpts>;
 
@@ -101,6 +97,4 @@ export function isError(err: unknown): err is Error;
  *
  * @param err - The error.
  */
-export function isSystem(
-    err: unknown,
-): err is EvalError | RangeError | ReferenceError | SyntaxError | TypeError | URIError | AssertionError | AssertError;
+export function isSystem(err: unknown): boolean;
