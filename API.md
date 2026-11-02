@@ -1,4 +1,3 @@
-
 ## Introduction
 
 Working with `async`/`await` introduces a new challenge in handling errors. Unlike callbacks, which
@@ -10,6 +9,7 @@ useful fallback. In those cases, it is still imperative to allow developer error
 not get swallowed.
 
 For more information read:
+
 - [Learning to Throw Again](https://medium.com/@eranhammer/learning-to-throw-again-79b498504d28)
 - [Catching without Awaiting](https://medium.com/@eranhammer/catching-without-awaiting-b2cb7df45790)
 
@@ -17,7 +17,6 @@ For example:
 
 ```js
 async function email(user) {
-
     if (!user.address) {
         throw new Error('User has no email address');
     }
@@ -31,15 +30,13 @@ async function email(user) {
 }
 
 async function register(address, name) {
-
     const user = { address, name };
     const id = await db.user.insert(user);
     user.id = id;
 
     try {
         await email(user);
-    }
-    catch (err) { }             // Ignore errors
+    } catch (err) {} // Ignore errors
 
     return user;
 }
@@ -53,19 +50,17 @@ paths, errors are checked and addressed, but in the non-critical paths, errors a
 This can be solved by adding a `rethrow()` statement:
 
 ```js
-const Bounce = require('@hapi/bounce');
+import * as Bounce from '@hapi/bounce';
 
 async function register(address, name) {
-
     const user = { address, name };
     const id = await db.user.insert(user);
     user.id = id;
 
     try {
         await email(user);
-    }
-    catch (err) {
-        Bounce.rethrow(err, 'system');  // Rethrows system errors and ignores application errors
+    } catch (err) {
+        Bounce.rethrow(err, 'system'); // Rethrows system errors and ignores application errors
     }
 
     return user;
@@ -77,10 +72,11 @@ async function register(address, name) {
 ### `rethrow(err, types, [options])`
 
 Throws the error passed if it matches any of the specified rules where:
+
 - `err` - the error.
 - `type` - a single item or an array of items of:
     - An error constructor (e.g. `SyntaxError`).
-    - `'system'` - matches any languange native error or node assertions.
+    - `'system'` - matches any language native error or node assertions.
     - `'boom'` - matches [**boom**](https://github.com/hapijs/boom) errors.
     - an object where each property is compared with the error and must match the error property
       value. All the properties in the object must match the error but do not need to include all
@@ -100,6 +96,7 @@ not matching is thrown after applying the `options`.
 
 Awaits for the value to resolve in the background and then apply either the `rethrow()` or `ignore()`
 actions where:
+
 - `operation` - a function, promise, or value that is `await`ed on inside a `try...catch` and any
   error thrown processed by the `action` rule.
 - `action` - one of `'rethrow'` or `'ignore'`. Defaults to `'rethrow'`.
@@ -117,6 +114,7 @@ Returns `true` when `err` is an error.
 ### `isSystem(err)`
 
 Return `true` when `err` is one of:
+
 - `EvalError`
 - `RangeError`
 - `ReferenceError`
@@ -124,3 +122,4 @@ Return `true` when `err` is one of:
 - `TypeError`
 - `URIError`
 - Node's `AssertionError`
+- Hoek's `AssertError`
