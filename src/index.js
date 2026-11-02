@@ -1,49 +1,37 @@
-'use strict';
+import { AssertionError } from 'node:assert';
 
-const Assert = require('assert');
+import * as Boom from '@hapi/boom';
+import * as Hoek from '@hapi/hoek';
 
-const Boom = require('@hapi/boom');
-const Hoek = require('@hapi/hoek');
+const system = [
+    // JavaScript
 
+    EvalError,
+    RangeError,
+    ReferenceError,
+    SyntaxError,
+    TypeError,
+    URIError,
 
-const internals = {
-    system: [
+    // Node
 
-        // JavaScript
+    AssertionError,
 
-        EvalError,
-        RangeError,
-        ReferenceError,
-        SyntaxError,
-        TypeError,
-        URIError,
+    // Hoek
 
-        // Node
+    Hoek.AssertError,
+];
 
-        Assert.AssertionError,
+export function rethrow(err, types, options = {}) {
+    return handle(err, types, options, true);
+}
 
-        // Hoek
+export function ignore(err, types, options = {}) {
+    return handle(err, types, options, false);
+}
 
-        Hoek.AssertError
-    ]
-};
-
-
-exports.rethrow = function (err, types, options = {}) {
-
-    return internals.catch(err, types, options, true);
-};
-
-
-exports.ignore = function (err, types, options = {}) {
-
-    return internals.catch(err, types, options, false);
-};
-
-
-internals.catch = function (err, types, options, match) {
-
-    if (internals.match(err, types) !== match) {
+function handle(err, types, options, shouldMatch) {
+    if (match(err, types) !== shouldMatch) {
         return;
     }
 
@@ -64,39 +52,31 @@ internals.catch = function (err, types, options, match) {
     }
 
     throw err;
-};
+}
 
+const actions = { rethrow, ignore };
 
-exports.background = async function (operation, action = 'rethrow', types = 'system', options = {}) {
-
+export async function background(operation, action = 'rethrow', types = 'system', options = {}) {
     try {
         if (typeof operation === 'function') {
             await operation();
-        }
-        else {
+        } else {
             await operation;
         }
+    } catch (err) {
+        return actions[action](err, types, options);
     }
-    catch (err) {
-        return exports[action](err, types, options);
-    }
-};
+}
 
-
-exports.isBoom = function (err) {
-
+export function isBoom(err) {
     return Boom.isBoom(err);
-};
+}
 
-
-exports.isError = function (err) {
-
+export function isError(err) {
     return err instanceof Error;
-};
+}
 
-
-exports.isSystem = function (err) {
-
+export function isSystem(err) {
     if (!err) {
         return false;
     }
@@ -105,24 +85,21 @@ exports.isSystem = function (err) {
         return false;
     }
 
-    for (const system of internals.system) {
-        if (err instanceof system) {
+    for (const type of system) {
+        if (err instanceof type) {
             return true;
         }
     }
 
     return false;
+}
+
+const rules = {
+    system: isSystem,
+    boom: isBoom,
 };
 
-
-internals.rules = {
-    system: exports.isSystem,
-    boom: exports.isBoom
-};
-
-
-internals.match = function (err, types) {
-
+function match(err, types) {
     if (!types) {
         return true;
     }
@@ -130,19 +107,17 @@ internals.match = function (err, types) {
     types = Array.isArray(types) ? types : [types];
     for (const type of types) {
         if (typeof type === 'string') {
-            if (internals.rules[type](err)) {
+            if (rules[type](err)) {
                 return true;
             }
-        }
-        else if (typeof type === 'object') {
+        } else if (typeof type === 'object') {
             if (Hoek.contain(err, type, { deep: true, part: true })) {
                 return true;
             }
-        }
-        else if (err instanceof type) {
+        } else if (err instanceof type) {
             return true;
         }
     }
 
     return false;
-};
+}
